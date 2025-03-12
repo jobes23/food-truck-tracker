@@ -1,0 +1,46 @@
+.cuisine-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0;
+  }
+  
+  .cuisine-item {
+    padding: 8px 12px;
+    background-color: #333;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .cuisine-item:hover {
+    background-color: #555;
+  }
+  
+  .cuisine-item.selected {
+    background-color: #4CAF50; /* Green for selected */
+    font-weight: bold;
+  }
+  
+  /* 🔥 Food Icon Selector */
+  .icon-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0;
+  }
+  
+  .icon-item {
+    font-size: 24px;
+    padding: 6px;
+    cursor: pointer;
+    border: 2px solid transparent;
+  }
+  
+  .icon-item.selected {
+    border: 2px solid #4CAF50;
+    border-radius: 50%;
+    padding: 4px;
+  }
+  

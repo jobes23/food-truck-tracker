@@ -1,0 +1,37 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  color-scheme: light dark;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* 🌍 Global Layout (Move to index.css if keeping it) */
+html, body, #root {
+  height: 100dvh; /* Dynamic height for mobile */
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  caret-color: transparent;
+}
+
+input {
+  caret-color: #444;
+}
+
+@media (max-width: 768px) {
+  :root {
+    font-size: 18px;
+  }
+}
+
+/* Scale up even more for high-DPI devices */
+@media (max-width: 480px) and (min-resolution: 3dppx) {
+  :root {
+    font-size: 20px;
+  }
+}

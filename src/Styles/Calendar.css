@@ -1,0 +1,156 @@
+/* 🟢 General Calendar Container */
+.calendar {
+    width: 100%;
+    margin: auto;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    text-align: center;
+    font-family: Arial, sans-serif;
+  }
+  
+  /* 🟢 Calendar Header (Month & Year + Navigation Buttons) */
+  .calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+  }
+
+  .calendar-month {
+    font-size: x-large;
+}
+  
+  .calendar-header button {
+    background: #ff9800;
+    border: none;
+    color: white;
+    font-size: x-large;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: 0.3s;
+    width: 69px;
+    margin: 0;
+  }
+  
+  .calendar-header button:hover {
+    background: #e68900;
+  }
+  
+  /* 🟢 Weekdays Row */
+  .table-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: #f0f0f0;
+    padding: 10px 0;
+    font-weight: bold;
+    border-radius: 5px;
+  }
+  
+  .weekday {
+    text-align: center;
+    font-size: 14px;
+    color: #555;
+  }
+  
+  /* 🟢 Calendar Grid */
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    padding: 10px 0;
+  }
+  
+  /* 🟢 Calendar Cells */
+  .calendar-cell {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.2s ease-in-out;
+  }
+  
+  .calendar-cell:hover {
+    background: #ffe0b2;
+  }
+  
+  /* 🟢 Date Label */
+  .date-label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+  }
+  
+  /* 🟢 Empty Days (Before Month Starts) */
+  .calendar-cell.empty {
+    background: transparent;
+    border: none;
+    pointer-events: none;
+  }
+  
+  /* 🟢 Truck Entries */
+  .truck-entry {
+    background: #4caf50;
+    color: white;
+    font-size: 12px;
+    padding: 5px;
+    margin-top: 5px;
+    border-radius: 5px;
+    width: 90%;
+    text-align: center;
+    cursor: pointer;
+  }
+  
+  .truck-entry:hover {
+    background: #388e3c;
+  }
+  
+  /* 🟢 Filter Dropdown */
+  .filter-label {
+    font-size: 14px;
+    font-weight: bold;
+    margin-right: 10px;
+  }
+  
+  .dropdown {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    cursor: pointer;
+    outline: none;
+    transition: 0.3s;
+  }
+  
+  .dropdown:hover {
+    border-color: #ff9800;
+  }
+  
+  /* 🟢 Mobile Responsiveness */
+  @media (max-width: 768px) {
+    .calendar-grid {
+      grid-template-columns: repeat(7, 1fr);
+    }
+  
+    .calendar-cell {
+      min-height: 70px;
+      font-size: 12px;
+    }
+  
+    .calendar-header {
+      font-size: 16px;
+    }
+  }
+  

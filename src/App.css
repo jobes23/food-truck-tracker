@@ -1,0 +1,130 @@
+/* 📍 Map Container */
+.map-container {
+  position: relative;
+  height: 100dvh;
+  width: 100vw;
+  display:flex;
+  flex-direction: column;
+}
+
+/* 🔍 Filter Button */
+.filter-toggle {
+  position: absolute;
+  bottom: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  z-index: 9999;
+}
+
+.filter-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+/* 🚚 Food Truck Marker */
+.truck-logo-marker {
+  border-radius: 10px;
+  border: 3px solid #1f1f1f;
+}
+
+/* 🎨 Cuisine Options */
+.cuisine-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.cuisine-item {
+  padding: 2px 15px;
+  text-align: center;
+  border-radius: 20px;
+  background-color: #3a3a3a; /* Darker gray for contrast */
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 16px;
+  color: white;
+}
+
+.cuisine-item.selected {
+  background-color: #9b1b30;
+  color: white;
+  font-weight: bold;
+}
+
+/* 📍 Map Checkboxes */
+.mapCheckBox {
+  width: unset;
+  margin-bottom: unset;
+  border: 1px solid #555;
+  border-radius: 5px;
+  font-size: 16px;
+  background: #292929;
+  color: #fff;
+}
+
+/* 📋 Food Truck Form */
+.food-truck-form {
+  background: #222;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
+  width: 400px;
+  text-align: center;
+}
+
+.food-truck-form h2 {
+  color: white;
+}
+
+.food-truck-form label {
+  display: block;
+  margin-top: 10px;
+  color: #ddd;
+  font-weight: bold;
+  text-align: left;
+}
+
+.food-truck-form input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border-radius: 5px;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  background: #333;
+  color: white;
+}
+
+.Toastify__close-button{
+  display:none;
+}
+
+.hidden{
+  display:none;
+}
+
+/* 📌 Mobile Fixes */
+@media screen and (max-width: 768px) {
+  .filter-toggle {
+    bottom: 10%;
+  }
+
+  .food-truck-form {
+    width: 90%;
+  }
+
+  .cuisine-item {
+    padding: 8px 12px;
+  }
+}
