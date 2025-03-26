@@ -14,9 +14,6 @@ export interface ProcessedFoodTruck extends FoodTruck {
 const DEFAULT_CENTER: [number, number] = [34.2257, -77.9447]; // Wilmington, NC
 const ONE_HOUR = 60 * 60 * 1000;
 
-const TIMEZONE_API_URL = "http://api.timezonedb.com/v2.1/get-time-zone";
-const TIMEZONE_API_KEY = import.meta.env.VITE_TIMEZONE_DB_API;
-
 const getDateInTimezone = (timezone: string) => {
   const now = new Date();
   const options: Intl.DateTimeFormatOptions = {
@@ -29,7 +26,7 @@ const getDateInTimezone = (timezone: string) => {
 };
 
 const Map: React.FC = () => {
-  const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_CENTER);
+  const [mapCenter] = useState<[number, number]>(DEFAULT_CENTER);
   const [timezone, setTimezone] = useState<string | null>(null);
   const [loadingTimezone, setLoadingTimezone] = useState<boolean>(true);
   const [timeRange, setTimeRange] = useState<number>(5);
@@ -40,8 +37,8 @@ const Map: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [trucksData, setTrucksData] = useState<ProcessedFoodTruck[]>([]);
   const { data: rawFoodTrucks, callApi, loading } = useAPI<{ trucks: FoodTruck[] }>();
+  const { callApi: callTimezoneApi } = useAPI<{ zoneName: string }>();
 
-  // Favorite Trucks (Stored in Local Storage)
   const [favoriteTrucks, setFavoriteTrucks] = useState<string[]>(() => {
     return JSON.parse(localStorage.getItem("favoriteTrucks") || "[]");
   });
@@ -51,16 +48,19 @@ const Map: React.FC = () => {
     const fetchTimezone = async () => {
       try {
         setLoadingTimezone(true);
-        const response = await fetch(
-          `${TIMEZONE_API_URL}?key=${TIMEZONE_API_KEY}&format=json&by=position&lat=${mapCenter[0]}&lng=${mapCenter[1]}`
+        const { success, data, error } = await callTimezoneApi(
+          `getTimezone?lat=${mapCenter[0]}&lng=${mapCenter[1]}`,
+          "GET",
+          null,
+          {},
+          false // ⬅️ If this route doesn't require auth
         );
-        const data = await response.json();
 
-        if (data.status === "OK" && data.zoneName) {
+        if (success && data?.zoneName) {
           console.log("[TIMEZONE] Timezone set to:", data.zoneName);
           setTimezone(data.zoneName);
         } else {
-          console.error("[TIMEZONE ERROR] Failed to fetch timezone data:", data);
+          console.error("[TIMEZONE ERROR] Failed to fetch timezone:", error);
         }
       } catch (error) {
         console.error("[TIMEZONE ERROR] Exception while fetching timezone:", error);
@@ -80,47 +80,35 @@ const Map: React.FC = () => {
     }
   }, [timezone]);
 
-  // **API Call to Fetch Food Trucks (Handles Caching)**
   useEffect(() => {
     if (!selectedDate) return;
-  
+
     console.log(`[API CALL] Checking cache for date: ${selectedDate}`);
-  
     const storedData = sessionStorage.getItem(`trucks_${selectedDate}`);
     let processedData: ProcessedFoodTruck[] = [];
-  
+
     if (storedData && Date.now() - JSON.parse(storedData).timestamp < ONE_HOUR) {
       console.log(`[CACHE] Using cached data for ${selectedDate}`);
       processedData = JSON.parse(storedData).trucks;
     } else {
       console.log(`[API CALL] Fetching trucks for date: ${selectedDate}`);
       callApi(`getFoodTrucks?date=${encodeURIComponent(selectedDate)}`, "GET");
-      return; // 🚀 Exit early, data will be handled in next effect when API responds
+      return;
     }
-  
-    // ✅ Extract unique cuisines while ensuring valid strings
+
     const uniqueCuisines = Array.from(
       new Set(
         processedData.map((truck) => truck.cuisine).filter((cuisine): cuisine is string => Boolean(cuisine))
       )
     );
-  
-    console.log("[PROCESSING] Unique cuisines:", uniqueCuisines);
-    
-    // ✅ Set cuisine list
-    setCuisineList(uniqueCuisines);
-  
-    // ✅ Set selected cuisines only if empty (prevents overwriting user selections)
-    setSelectedCuisines((prev) => (prev.length === 0 ? uniqueCuisines : prev));
-  
-    setTrucksData(processedData);
-  }, [selectedDate, callApi]);  
 
-  // **Process API Response & Extract Cuisines**
+    setCuisineList(uniqueCuisines);
+    setSelectedCuisines((prev) => (prev.length === 0 ? uniqueCuisines : prev));
+    setTrucksData(processedData);
+  }, [selectedDate, callApi]);
+
   useEffect(() => {
     if (!selectedDate || !rawFoodTrucks?.trucks || !Array.isArray(rawFoodTrucks.trucks)) return;
-
-    console.log("[API RESPONSE] Trucks received:", rawFoodTrucks.trucks);
 
     const processedData: ProcessedFoodTruck[] = rawFoodTrucks.trucks.map((truck) => {
       const status = getTruckStatus(truck.startTime, truck.endTime, selectedDate, timeRange, timezone || "UTC");
@@ -131,9 +119,6 @@ const Map: React.FC = () => {
       };
     });
 
-    console.log("[PROCESSING] Processed trucks with status:", processedData);
-
-    // ✅ Extract cuisines while ensuring they are valid strings
     const uniqueCuisines = Array.from(
       new Set(
         rawFoodTrucks.trucks
@@ -142,28 +127,20 @@ const Map: React.FC = () => {
       )
     );
 
-    console.log("[PROCESSING] Unique cuisines:", uniqueCuisines);
     setCuisineList(uniqueCuisines);
     sessionStorage.setItem(`trucks_${selectedDate}`, JSON.stringify({ trucks: processedData, timestamp: Date.now() }));
     setTrucksData(processedData);
   }, [rawFoodTrucks, selectedDate, timeRange, timezone]);
 
-  // **Filter Trucks Based on Cuisine & Status**
   const processedTrucks: ProcessedFoodTruck[] = useMemo(() => {
-    if (!trucksData || trucksData.length === 0) {
-      return [];
-    }
-  
+    if (!trucksData || trucksData.length === 0) return [];
+
     return trucksData.filter((truck) => {
-      const matchesCuisine =
-        selectedCuisines.length === 0 || (truck.cuisine && selectedCuisines.includes(truck.cuisine));
-  
-      const matchesStatus =
-        selectedStatuses.length === 0 || selectedStatuses.includes(truck.status || ""); // ✅ Keeps selected statuses in sync
-  
+      const matchesCuisine = selectedCuisines.length === 0 || (truck.cuisine && selectedCuisines.includes(truck.cuisine));
+      const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(truck.status || "");
       return truck.isInRange && matchesCuisine && matchesStatus;
     });
-  }, [trucksData, selectedCuisines, selectedStatuses]);  
+  }, [trucksData, selectedCuisines, selectedStatuses]);
 
   return (
     <div className="map-container">
@@ -185,13 +162,15 @@ const Map: React.FC = () => {
         setSelectedStatuses={setSelectedStatuses}
       />
 
-      {selectedDate && <MapComponent
-        foodTrucks={processedTrucks}
-        favoriteTrucks={favoriteTrucks}
-        toggleFavorite={(truck) =>
-          setFavoriteTrucks((prev) => (prev.includes(truck) ? prev : [...prev, truck]))
-        }
-      />}
+      {selectedDate && (
+        <MapComponent
+          foodTrucks={processedTrucks}
+          favoriteTrucks={favoriteTrucks}
+          toggleFavorite={(truck) =>
+            setFavoriteTrucks((prev) => (prev.includes(truck) ? prev : [...prev, truck]))
+          }
+        />
+      )}
     </div>
   );
 };

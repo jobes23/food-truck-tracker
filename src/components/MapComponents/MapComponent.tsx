@@ -13,6 +13,7 @@ interface Props {
 }
 
 const MarkerClusters: React.FC<Props> = ({ foodTrucks, favoriteTrucks, toggleFavorite }) => {
+  console.log(toggleFavorite)
   const map = useMap();
 
   useEffect(() => {

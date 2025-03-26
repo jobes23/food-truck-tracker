@@ -29,10 +29,7 @@ const getDateInTimezone = (date: Date, timezone: string): string => {
 const TruckFilter: React.FC<TruckFilterProps> = ({
   selectedDate,
   setSelectedDate,
-  timeRange,
   setTimeRange,
-  category,
-  setCategory,
   cuisine,
   setCuisine,
   cuisineList,
@@ -43,7 +40,6 @@ const TruckFilter: React.FC<TruckFilterProps> = ({
 }) => {
   const [selectedFilter, setSelectedFilter] = useState<string>("Today");
   const [showCuisinePicker, setShowCuisinePicker] = useState<boolean>(false);
-
   useEffect(() => {
     console.log(cuisineList)
     if (selectedStatuses.length === 0) {

@@ -10,14 +10,14 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, role, loading } = useAuth();
+// const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+//   const { user, role, loading } = useAuth();
 
-  if (loading) return <LoadingOverlay />;
-  if (!user || !role) return <Navigate to="/login" replace />;
+//   if (loading) return <LoadingOverlay />;
+//   if (!user || !role) return <Navigate to="/login" replace />;
 
-  return children;
-};
+//   return children;
+// };
 
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, role, loading } = useAuth();

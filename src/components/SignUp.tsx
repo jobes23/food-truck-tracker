@@ -78,7 +78,7 @@ const Signup: React.FC = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+    console.log(setInstagram, setFacebook, setLogo, setDefaultFoodIcon, setCuisine, setBusinessName)
     if (step === 2 && type === "food_truck" && cuisine.length === 0) {
         setError("Please select at least one cuisine.");
         return;
@@ -117,7 +117,7 @@ const Signup: React.FC = () => {
         const auth = getAuth();
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
-  
+          console.log(user)
         // const token = await user.getIdToken();
   
         

@@ -12,7 +12,6 @@ interface CalendarDaysProps {
 
 const CalendarDays: React.FC<CalendarDaysProps> = ({
   day,
-  changeCurrentDay,
   scheduleMap,
   selectedTruck,
   onDateClick,
