@@ -6,6 +6,7 @@ import Login from "./components/Login";
 import Signup from "./components/SignUp";
 import AdminPanel from "./components/AdminPanel";
 import LoadingOverlay from "./components/LoadingOverlay";
+import ResetPassword from "./components/ResetPassword";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
@@ -38,6 +39,7 @@ const App: React.FC = () => {
           <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
         <ToastContainer />
       </AuthProvider>
