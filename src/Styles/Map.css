@@ -50,6 +50,10 @@
     margin-left: 10px;
 }
 
+.date-picker {
+    width: 100%;
+}
+
 /* 🔲 Checkboxes Styling */
 .mapCheckBox {
     width: unset;
