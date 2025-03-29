@@ -30,7 +30,7 @@ const ScheduleSponsor: React.FC = () => {
   const [filterEndDate, setFilterEndDate] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [scheduleMap, setScheduleMap] = useState<Record<string, SponsorScheduleEntry[]>>({});
-  const [currentMonth, setCurrentMonth] = useState(() => {
+  const [currentMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });

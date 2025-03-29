@@ -38,7 +38,7 @@ const ScheduleFoodTruck: React.FC = () => {
   const [selectedTruckId, setSelectedTruckId] = useState<string>("");
   const [modalOpen, setModalOpen] = useState(false);
   const [scheduleMap, setScheduleMap] = useState<Record<string, TruckEntry[]>>({});
-  const [currentMonth, setCurrentMonth] = useState(() => {
+  const [currentMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
@@ -48,7 +48,6 @@ const ScheduleFoodTruck: React.FC = () => {
   const submitApi = useAPI();
 
   const foodTrucks: FoodTruck[] = scheduleApi.data?.foodTrucks || [];
-  const schedules: ScheduleEntry[] = scheduleApi.data?.schedules || [];
 
   // ✅ Stable API call with useCallback
   const fetchSchedule = useCallback(() => {
