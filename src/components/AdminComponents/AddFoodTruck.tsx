@@ -3,27 +3,28 @@ import useAPI from "../../hooks/useAPI";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "../../Styles/AddFoodTruck.css";
+import PlaceAutocompleteInput from "../../utils/PlaceAutocompleteInput";
 
-interface AddFoodTruckProps {
-}
 
-// 🔥 Food Icons
 const foodIcons = [
   "🍔", "🌮", "🍕", "🍣", "🍜", "🥗", "🍩", "🥩", "🌭", "🥞", "🥪", "🍱",
   "🍙", "🍚", "🥧", "🍰", "🍪", "🍫", "🍿", "🍇", "🍉", "🍊", "🍎",
   "🍍", "🥝", "🥑", "🥦", "🥕", "🌽", "🌶️", "🍄", "🧄", "🧅", "🍠", "🥐",
   "🥨", "🥯", "🥖", "🧀", "🥚", "🥓", "🍗", "🍖", "🍤", "🦞", "🦀",
-  "🦑", "🦐", "🦪", "🍦", "🍭", "🎂", "🍮", "☕", "🍵", "🍋", "🥟", "🌭",
+  "🦑", "🦐", "🦪", "🍦", "🍭", "🎂", "🍮", "☕", "🍵", "🍋", "🥟",
 ];
-// 🔥 Cuisine List
+
 const cuisinesList = [
   "American", "Mexican", "Italian", "Chinese", "Pizza", "Indian", "Mediterranean", "Vegan", "Venezuelan",
   "BBQ", "Japanese", "Korean", "Thai", "French", "Seafood", "Coffee", "Desserts", "Lemonade", "Sandwiches", "Southern",
 ];
 
-const AddFoodTruck: React.FC<AddFoodTruckProps> = () => { // No setMessage
+const AddFoodTruck: React.FC = () => {
   const [truck, setTruck] = useState({
     truckName: "",
+    region: "",
+    franchiseId: "",
+    description: "",
     cuisine: [] as string[],
     logo: "",
     website: "",
@@ -34,32 +35,40 @@ const AddFoodTruck: React.FC<AddFoodTruckProps> = () => { // No setMessage
 
   const { callApi, loading, error } = useAPI();
 
-  // ✅ Handle Cuisine Selection (Multi-select)
   const handleCuisineSelect = (selectedCuisine: string) => {
     setTruck((prev) => ({
       ...prev,
       cuisine: prev.cuisine.includes(selectedCuisine)
-        ? prev.cuisine.filter((c) => c !== selectedCuisine) // Remove if already selected
-        : [...prev.cuisine, selectedCuisine], // Add if not selected
+        ? prev.cuisine.filter((c) => c !== selectedCuisine)
+        : [...prev.cuisine, selectedCuisine],
     }));
   };
 
-  // ✅ Handle Food Icon Selection
   const handleIconSelect = (icon: string) => {
     setTruck((prev) => ({ ...prev, foodIcon: icon }));
   };
 
-  // ✅ Handle Add Truck Submission
   const handleAddTruck = async () => {
-    if (!truck.truckName || truck.cuisine.length === 0) {
-      toast.error("❌ Please fill in all required fields.");
+    if (!truck.truckName || !truck.region || truck.cuisine.length === 0) {
+      toast.error("❌ Please fill in required fields: name, region, and at least one cuisine.");
       return;
     }
 
     const response = await callApi("addFoodTruck", "POST", truck);
     if (response.success) {
-      toast.success(`✅ ${truck.truckName} has been added successfully!`);
-      setTruck({ truckName: "", cuisine: [], logo: "", website: "", facebook: "", instagram: "", foodIcon: "🚚" });
+      toast.success(`${truck.truckName} added!`);
+      setTruck({
+        truckName: "",
+        region: "",
+        franchiseId: "",
+        description: "",
+        cuisine: [],
+        logo: "",
+        website: "",
+        facebook: "",
+        instagram: "",
+        foodIcon: "🚚",
+      });
     } else {
       toast.error(error || "❌ Failed to add food truck.");
     }
@@ -70,9 +79,35 @@ const AddFoodTruck: React.FC<AddFoodTruckProps> = () => { // No setMessage
       <h3>➕ Add New Food Truck</h3>
 
       <label htmlFor="truckName">Truck Name:</label>
-      <input id="truckName" type="text" value={truck.truckName} onChange={(e) => setTruck({ ...truck, truckName: e.target.value })} required />
+      <input
+        id="truckName"
+        type="text"
+        value={truck.truckName}
+        onChange={(e) => setTruck({ ...truck, truckName: e.target.value })}
+        required
+      />
 
-      {/* 🔥 Clickable Cuisine Selection */}
+      <label htmlFor="region">Region:</label>
+      <PlaceAutocompleteInput
+        onSelect={(region) => setTruck((prev) => ({ ...prev, region }))}
+      />
+
+      <label htmlFor="franchiseId">Franchise ID (Optional):</label>
+      <input
+        id="franchiseId"
+        type="text"
+        value={truck.franchiseId}
+        onChange={(e) => setTruck({ ...truck, franchiseId: e.target.value })}
+      />
+
+      <label htmlFor="description">Truck Description / Color (Optional):</label>
+      <input
+        id="description"
+        type="text"
+        value={truck.description}
+        onChange={(e) => setTruck({ ...truck, description: e.target.value })}
+      />
+
       <label>Select Cuisine Type:</label>
       <div className="cuisine-options">
         {cuisinesList.map((c) => (
@@ -86,26 +121,42 @@ const AddFoodTruck: React.FC<AddFoodTruckProps> = () => { // No setMessage
         ))}
       </div>
 
-      {/* Display Selected Cuisines */}
       {truck.cuisine.length > 0 && (
-        <div className="selected-cuisines">
-          Selected: {truck.cuisine.join(", ")}
-        </div>
+        <div className="selected-cuisines">Selected: {truck.cuisine.join(", ")}</div>
       )}
 
       <label htmlFor="logo">Logo URL (Optional):</label>
-      <input id="logo" type="text" value={truck.logo} onChange={(e) => setTruck({ ...truck, logo: e.target.value })} />
+      <input
+        id="logo"
+        type="text"
+        value={truck.logo}
+        onChange={(e) => setTruck({ ...truck, logo: e.target.value })}
+      />
 
       <label htmlFor="website">Website (Optional):</label>
-      <input id="website" type="text" value={truck.website} onChange={(e) => setTruck({ ...truck, website: e.target.value })} />
+      <input
+        id="website"
+        type="text"
+        value={truck.website}
+        onChange={(e) => setTruck({ ...truck, website: e.target.value })}
+      />
 
       <label htmlFor="facebook">Facebook (Optional):</label>
-      <input id="facebook" type="text" value={truck.facebook} onChange={(e) => setTruck({ ...truck, facebook: e.target.value })} />
+      <input
+        id="facebook"
+        type="text"
+        value={truck.facebook}
+        onChange={(e) => setTruck({ ...truck, facebook: e.target.value })}
+      />
 
       <label htmlFor="instagram">Instagram (Optional):</label>
-      <input id="instagram" type="text" value={truck.instagram} onChange={(e) => setTruck({ ...truck, instagram: e.target.value })} />
+      <input
+        id="instagram"
+        type="text"
+        value={truck.instagram}
+        onChange={(e) => setTruck({ ...truck, instagram: e.target.value })}
+      />
 
-      {/* 🔥 Food Icon Selector */}
       <label>Select Food Icon:</label>
       <div className="icon-options">
         {foodIcons.map((icon) => (
@@ -119,7 +170,9 @@ const AddFoodTruck: React.FC<AddFoodTruckProps> = () => { // No setMessage
         ))}
       </div>
 
-      <button onClick={handleAddTruck} disabled={loading}>➕ {loading ? "Adding..." : "Add Truck"}</button>
+      <button onClick={handleAddTruck} disabled={loading}>
+        ➕ {loading ? "Adding..." : "Add Truck"}
+      </button>
     </div>
   );
 };

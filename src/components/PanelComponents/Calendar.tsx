@@ -1,25 +1,32 @@
 import React from "react";
-import CalendarDays from "./CalendarDays";
 import "../../Styles/Calendar.css";
-import { TruckEntry } from "../../types"; // ✅ Import `TruckEntry`
 
-interface CalendarProps {
-  scheduleMap: Record<string, TruckEntry[]>; // ✅ Ensure it's a map of `TruckEntry[]`
-  selectedTruck: string;
+interface CalendarProps<T> {
+  scheduleMap: Record<string, T[]>;
+  selectedEntityId?: string;
   onDateClick: (date: Date) => void;
-  onTruckClick: (truck: TruckEntry) => void; // ✅ Expect `TruckEntry` here
+  onEntryClick: (entry: T) => void;
+  CalendarGridComponent: React.FC<{
+    day: Date;
+    changeCurrentDay: (day: Date) => void;
+    scheduleMap: Record<string, T[]>;
+    selectedEntityId?: string;
+    onDateClick: (date: Date) => void;
+    onEntryClick: (entry: T) => void;
+  }>;
 }
 
-const Calendar: React.FC<CalendarProps> = ({
+function Calendar<T>({
   scheduleMap,
-  selectedTruck,
+  selectedEntityId,
   onDateClick,
-  onTruckClick,
-}) => {
+  onEntryClick,
+  CalendarGridComponent,
+}: CalendarProps<T>) {
   const [currentDay, setCurrentDay] = React.useState(new Date());
 
-  const handleMonthChange = (change: number) => {
-    setCurrentDay((prev) => new Date(prev.getFullYear(), prev.getMonth() + change, 1));
+  const handleMonthChange = (offset: number) => {
+    setCurrentDay((prev) => new Date(prev.getFullYear(), prev.getMonth() + offset, 1));
   };
 
   return (
@@ -33,17 +40,17 @@ const Calendar: React.FC<CalendarProps> = ({
       </div>
 
       <div className="calendar-body">
-        <CalendarDays
+        <CalendarGridComponent
           day={currentDay}
           changeCurrentDay={setCurrentDay}
           scheduleMap={scheduleMap}
-          selectedTruck={selectedTruck}
+          selectedEntityId={selectedEntityId}
           onDateClick={onDateClick}
-          onTruckClick={onTruckClick} // ✅ Ensure it's correctly passed
+          onEntryClick={onEntryClick}
         />
       </div>
     </div>
   );
-};
+}
 
 export default Calendar;

@@ -28,6 +28,7 @@
     align-items: center;
     gap: 10px;
     transition: background 0.3s;
+    margin-bottom: 10px;
 }
 
 .sidebar-btn:hover, .sidebar-btn.active {

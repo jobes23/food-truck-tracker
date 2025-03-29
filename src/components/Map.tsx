@@ -2,7 +2,8 @@ import React, { useState, useMemo, useEffect } from "react";
 import useAPI from "../hooks/useAPI";
 import MapComponent from "./MapComponents/MapComponent";
 import TruckFilter from "./MapComponents/TruckFilter";
-import { getTruckStatus, FoodTruck } from "../utils/FoodTruckUtils";
+import { getTruckStatus } from "../utils/FoodTruckUtils";
+import { FoodTruck } from "../types";
 import LoadingOverlay from "./LoadingOverlay";
 import "../Styles/Map.css";
 

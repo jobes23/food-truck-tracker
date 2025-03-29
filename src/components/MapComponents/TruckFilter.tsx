@@ -39,13 +39,13 @@ const TruckFilter: React.FC<TruckFilterProps> = ({
   setSelectedStatuses,
 }) => {
   const [selectedFilter, setSelectedFilter] = useState<string>("Today");
-  const [showCuisinePicker, setShowCuisinePicker] = useState<boolean>(false);
+  const [activeSection, setActiveSection] = useState<"date" | "cuisine" | "status" | null>(null);
+
   useEffect(() => {
-    console.log(cuisineList)
     if (selectedStatuses.length === 0) {
-      setSelectedStatuses(["open", "closing_soon", "opening_soon"]); // ✅ Start with all selected
+      setSelectedStatuses(["open", "closing_soon", "opening_soon"]);
     }
-  }, []);  
+  }, []);
 
   const handleDateSelection = (option: string) => {
     if (selectedFilter === option) return;
@@ -72,7 +72,6 @@ const TruckFilter: React.FC<TruckFilterProps> = ({
     setTimeRange(newTimeRange);
   };
 
-  // ✅ Toggle Cuisine Selection
   const toggleCuisine = (selectedCuisine: string) => {
     setCuisine((prev) =>
       prev.includes(selectedCuisine)
@@ -81,60 +80,74 @@ const TruckFilter: React.FC<TruckFilterProps> = ({
     );
   };
 
-  // ✅ Toggle Status Selection
   const toggleStatus = (status: string) => {
     setSelectedStatuses((prev) => {
       const updatedStatuses = prev.includes(status)
         ? prev.filter((s) => s !== status)
         : [...prev, status];
-  
-      return updatedStatuses.length === 0 ? ["open", "closing_soon", "opening_soon"] : updatedStatuses;
+      return updatedStatuses.length === 0
+        ? ["open", "closing_soon", "opening_soon"]
+        : updatedStatuses;
     });
-  };  
+  };
 
   return (
-    <div className="filter-popup">
-      <label htmlFor="dateFilter">📅 Select Date:</label>
-      <select id="dateFilter" value={selectedFilter} onChange={(e) => handleDateSelection(e.target.value)}>
-        <option value="Today">Today</option>
-        <option value="Tomorrow">Tomorrow</option>
-      </select>
+    <div className="filter-container">
+      <div className="filter-buttons">
+        <div className="filter-button" onClick={() => setActiveSection(activeSection === "date" ? null : "date")}>
+          📅
+        </div>
+        <div className="filter-button" onClick={() => setActiveSection(activeSection === "cuisine" ? null : "cuisine")}>
+          🍽️
+        </div>
+        <div className="filter-button" onClick={() => setActiveSection(activeSection === "status" ? null : "status")}>
+          🚦
+        </div>
+      </div>
 
       <p>🚚 {truckCount} food trucks available</p>
 
-      {/* ✅ Status Filter */}
-      <div className="status-container">
-        {["open", "closing_soon", "opening_soon"].map((status) => (
-          <div
-            key={status}
-            className={`status ${status} ${selectedStatuses.includes(status) ? "selected" : ""}`} // ✅ Keeps it visually indicated
-            onClick={() => toggleStatus(status)}
+      {activeSection === "date" && (
+        <div className="date-picker">
+          <label htmlFor="dateFilter">Select Date:</label>
+          <select
+            id="dateFilter"
+            value={selectedFilter}
+            onChange={(e) => handleDateSelection(e.target.value)}
           >
-            {status.replace("_", " ")}
-          </div>
-        ))}
-      </div>
+            <option value="Today">Today</option>
+            <option value="Tomorrow">Tomorrow</option>
+          </select>
+        </div>
+      )}
 
-      {/* ✅ Cuisine Filter - Accordion Picker */}
-      <div className="cuisine-picker">
-        <button className="cuisine-button" onClick={() => setShowCuisinePicker(!showCuisinePicker)}>
-          🍽️ Select Cuisines {cuisine.length > 0 ? `(${cuisine.length})` : ""}
-        </button>
+      {activeSection === "status" && (
+        <div className="status-container">
+          {["open", "closing_soon", "opening_soon"].map((status) => (
+            <div
+              key={status}
+              className={`status ${status} ${selectedStatuses.includes(status) ? "selected" : ""}`}
+              onClick={() => toggleStatus(status)}
+            >
+              {status.replace("_", " ")}
+            </div>
+          ))}
+        </div>
+      )}
 
-        {showCuisinePicker && (
-          <div className="cuisine-options">
-            {cuisineList.map((c) => (
-              <div
-                key={c}
-                className={`cuisine-item ${cuisine.includes(c) ? "selected" : ""}`}
-                onClick={() => toggleCuisine(c)}
-              >
-                {c}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {activeSection === "cuisine" && (
+        <div className="cuisine-options">
+          {cuisineList.map((c) => (
+            <div
+              key={c}
+              className={`cuisine-item ${cuisine.includes(c) ? "selected" : ""}`}
+              onClick={() => toggleCuisine(c)}
+            >
+              {c}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

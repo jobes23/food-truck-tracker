@@ -1,16 +1,6 @@
 import React, { useState, useEffect } from "react";
 import LocationPicker from "./LocationPicker";
-
-interface FoodTruck {
-  id: string;
-  truckName: string;
-  logo?: string;
-  cuisine?: string;
-  social?: {
-    facebook?: string;
-    instagram?: string;
-  };
-}
+import { FoodTruck } from "../../types";
 
 interface ScheduleTruckFormProps {
   selectedTruck: FoodTruck; // ✅ Passed from `ScheduleFoodTruck.tsx`

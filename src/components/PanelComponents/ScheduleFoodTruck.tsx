@@ -1,146 +1,143 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { toast } from "react-toastify";
 import Calendar from "./Calendar";
-import useAPI from "../../hooks/useAPI";
+import CalendarGrid from "./CalendarGrid";
 import Modal from "../Modal";
 import ScheduleTruckForm from "./ScheduleTruckForm";
-import "../../Styles/ScheduleFoodTruck.css";
+import useAPI from "../../hooks/useAPI";
 import { useAuth } from "../../context/AuthContext";
+import "../../Styles/ScheduleFoodTruck.css";
 import { ApiResponse, FoodTruck, ScheduleEntry, TruckEntry } from "../../types";
+
+// 🔧 Format helper to transform truck + schedule into backend-friendly payload
+const formatTruckScheduleData = (
+  truck: FoodTruck,
+  truckId: string,
+  data: ScheduleEntry
+) => ({
+  truckId,
+  truckName: truck.truckName,
+  cuisine: truck.cuisine,
+  logo: truck.logo,
+  social: truck.social,
+  website: truck.website,
+  foodIcon: truck.foodIcon,
+  region: truck.region || "",
+  franchiseId: truck.franchiseId || "",
+  description: truck.description || "",
+  date: data.date,
+  startTime: data.startTime,
+  endTime: data.endTime,
+  location: data.location,
+  latitude: data.latitude,
+  longitude: data.longitude,
+});
 
 const ScheduleFoodTruck: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTruckId, setSelectedTruckId] = useState<string>("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [scheduleMap, setScheduleMap] = useState<Record<string, TruckEntry[]>>({}); // ✅ Added useState
+  const [scheduleMap, setScheduleMap] = useState<Record<string, TruckEntry[]>>({});
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
 
-  // ✅ Use useAuth to get the current user and loading state
   const { user, loading: authLoading, role } = useAuth();
+  const scheduleApi = useAPI<ApiResponse | null>();
+  const submitApi = useAPI();
 
-  // ✅ Use `useAPI` to fetch schedules & food trucks
-  const { data, callApi: fetchSchedules } = useAPI<ApiResponse | null>();
-  const { callApi: scheduleTruckApi } = useAPI();
+  const foodTrucks: FoodTruck[] = scheduleApi.data?.foodTrucks || [];
+  const schedules: ScheduleEntry[] = scheduleApi.data?.schedules || [];
 
-  // ✅ Load schedules when the component mounts - NO AUTH REQUIRED
+  // ✅ Stable API call with useCallback
+  const fetchSchedule = useCallback(() => {
+    scheduleApi.callApi(`getScheduledFoodTrucks?month=${currentMonth}`, "GET");
+  }, [scheduleApi, currentMonth]);
+
   useEffect(() => {
-    const monthYear = `${new Date().getFullYear()}-${(new Date().getMonth() + 1)
-      .toString()
-      .padStart(2, "0")}`;
-    fetchSchedules(`getScheduledFoodTrucks?month=${monthYear}`, "GET");
-  }, [fetchSchedules]);
+    fetchSchedule();
+  }, [fetchSchedule]);
 
-  const foodTrucks: FoodTruck[] = data?.foodTrucks || [];
-  const schedules: ScheduleEntry[] = data?.schedules || [];
-
-  // ✅ Update `scheduleMap` when `schedules` data changes
+  // ✅ Guard against infinite updates
   useEffect(() => {
-    const newScheduleMap = schedules.reduce(
-      (acc, entry) => {
-        acc[entry.id] = entry.trucks.map((truck) => ({
-          ...truck,
-          date: entry.id, // ✅ Ensure each truck object contains the date
-        }));
-        return acc;
-      },
-      {} as Record<string, TruckEntry[]>
-    );
-    setScheduleMap(newScheduleMap);
-  }, [schedules]); // ✅ Runs when schedules change
+    if (!scheduleApi.data || scheduleApi.loading) return;
 
-  // ✅ Get the selected food truck details
-  const selectedTruck = foodTrucks.find((truck) => truck.id === selectedTruckId) || null;
+    const newMap = scheduleApi.data.schedules.reduce((acc, entry) => {
+      acc[entry.id] = entry.trucks.map((truck) => ({ ...truck, date: entry.id }));
+      return acc;
+    }, {} as Record<string, TruckEntry[]>);
 
-  // ✅ Handle clicking a date (Only opens if a truck is selected)
+    setScheduleMap(newMap);
+  }, [scheduleApi.data, scheduleApi.loading]);
+
+  const selectedTruck = useMemo(
+    () => foodTrucks.find((truck) => truck.id === selectedTruckId) || null,
+    [foodTrucks, selectedTruckId]
+  );
+
   const handleDateClick = (date: Date) => {
     if (!selectedTruckId) {
       toast.error("🚨 Please select a food truck before scheduling.");
       return;
     }
-
     setSelectedDate(date);
     setModalOpen(true);
   };
 
-  // ✅ Handle clicking a scheduled truck (edit mode)
   const handleTruckClick = (truck: TruckEntry) => {
     if (truck.truckId !== selectedTruckId) {
       toast.warn("⚠️ You're viewing another truck's schedule. Select the correct truck first.");
       return;
     }
-
     setSelectedDate(new Date(truck.date));
     setModalOpen(true);
   };
 
-  const handleScheduleTruck = async (scheduleData: ScheduleEntry) => {
-      if (!user) {
-          toast.error("❌ You must be logged in to schedule a truck.");
-          return; 
-      }
-      if (role !== 'admin' && role !== 'food_truck_owner') {
-          toast.error("❌ You do not have permission to schedule a truck.");
-          return;
-      }
-  
-      try {
-          const formattedData = {
-              truckId: selectedTruckId,
-              truckName: selectedTruck?.truckName || "",
-              cuisine: selectedTruck?.cuisine || "",
-              logo: selectedTruck?.logo || "",
-              social: selectedTruck?.social,
-              website: selectedTruck?.website,
-              date: scheduleData.date,
-              startTime: scheduleData.startTime,
-              endTime: scheduleData.endTime,
-              location: scheduleData.location,
-              latitude: scheduleData.latitude,
-              longitude: scheduleData.longitude,
-              foodIcon: selectedTruck?.foodIcon,
-          };
-  
-          const response = await scheduleTruckApi("addScheduleEntry", "POST", formattedData, {}, true);
-  
-          if (response.success) {
-              toast.success(`✅ ${selectedTruck?.truckName} scheduled successfully!`);
+  const handleScheduleTruck = async (data: ScheduleEntry) => {
+    if (!user) {
+      toast.error("❌ You must be logged in to schedule a truck.");
+      return;
+    }
+    if (role !== "admin" && role !== "food_truck_owner") {
+      toast.error("❌ You do not have permission to schedule a truck.");
+      return;
+    }
 
-              // ✅ Update state directly without another API call
-              setScheduleMap((prevMap) => {
-                  const updatedMap = { ...prevMap };
-                  
-                  // ✅ Get the correct date in `YYYY-MM-DD` format
-                  const dateKey = scheduleData.date;
-  
-                  // ✅ If the date already exists, append to it, otherwise create a new entry
-                  if (!updatedMap[dateKey]) {
-                      updatedMap[dateKey] = [];
-                  }
-                  updatedMap[dateKey].push(formattedData);
-  
-                  return updatedMap;
-              });
+    if (!selectedTruck) return;
 
-          } else {
-              toast.error(`❌ ${response.error || "Failed to schedule."}`);
-          }
-          setModalOpen(false);
-      } catch (error: any) {
-          toast.error(`❌ ${error.message || "An unexpected error occurred."}`);
-          setModalOpen(false);
+    try {
+      const payload = formatTruckScheduleData(selectedTruck, selectedTruckId, data);
+      const response = await submitApi.callApi("addScheduleEntry", "POST", payload);
+
+      if (response.success) {
+        toast.success(`✅ ${selectedTruck.truckName} scheduled successfully!`);
+        setScheduleMap((prev) => {
+          const copy = { ...prev };
+          const key = data.date;
+          if (!copy[key]) copy[key] = [];
+          copy[key].push(payload);
+          return copy;
+        });
+      } else {
+        toast.error(`❌ ${response.error || "Failed to schedule."}`);
       }
+    } catch (error: any) {
+      toast.error(`❌ ${error.message || "An unexpected error occurred."}`);
+    } finally {
+      setModalOpen(false);
+    }
   };
 
-  // Show loading indicator while authentication is in progress
-  if (authLoading) {
-    return <div>Loading authentication...</div>;
-  }
+  if (authLoading) return <div>Loading authentication...</div>;
 
   return (
     <div className="schedule-container">
       <h3>📅 Food Truck Schedule</h3>
 
-      {/* 🟢 Food Truck Selection (Must select before opening modal) */}
-      <label htmlFor="food-truck-filter" className="filter-label">Select a Food Truck:</label>
+      <label htmlFor="food-truck-filter" className="filter-label">
+        Select a Food Truck:
+      </label>
       <select
         id="food-truck-filter"
         title="Choose a food truck before scheduling"
@@ -149,22 +146,48 @@ const ScheduleFoodTruck: React.FC = () => {
         className="dropdown"
       >
         <option value="">Select a Food Truck</option>
-        {foodTrucks.map((truck) => (
-          <option key={truck.id} value={truck.id}>
-            {truck.truckName}
-          </option>
-        ))}
+        {Object.entries(
+          foodTrucks.reduce((acc, truck) => {
+            const region = truck.region || "Unspecified Region";
+            if (!acc[region]) acc[region] = [];
+            acc[region].push(truck);
+            return acc;
+          }, {} as Record<string, FoodTruck[]>)
+        )
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([region, trucks]) => (
+            <optgroup key={region} label={region}>
+              {trucks
+                .sort((a, b) => a.truckName.localeCompare(b.truckName))
+                .map((truck) => (
+                  <option key={truck.id} value={truck.id}>
+                    {truck.truckName}
+                  </option>
+                ))}
+            </optgroup>
+          ))}
       </select>
 
-      {/* 🟢 Calendar */}
       <Calendar
-        scheduleMap={scheduleMap} // ✅ Now coming from state
-        selectedTruck={selectedTruckId}
+        scheduleMap={scheduleMap}
+        selectedEntityId={selectedTruckId}
         onDateClick={handleDateClick}
-        onTruckClick={handleTruckClick}
+        onEntryClick={handleTruckClick}
+        CalendarGridComponent={(props) => (
+          <CalendarGrid
+            {...props}
+            getEntityId={(entry) => entry.truckId}
+            renderEntry={(entry) => (
+              <>
+                {entry.foodIcon || "🚚"} {entry.truckName}
+                <br />
+                ({entry.startTime} - {entry.endTime})
+              </>
+            )}
+          />
+        )}
       />
 
-      {/* 🟢 Modal for Scheduling */}
       {modalOpen && selectedTruck && selectedDate && (
         <Modal onClose={() => setModalOpen(false)}>
           <ScheduleTruckForm

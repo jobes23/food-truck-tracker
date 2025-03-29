@@ -1,21 +1,5 @@
 import L from "leaflet";
-
-// Define FoodTruck Interface
-export interface FoodTruck {
-  latitude: number;
-  longitude: number;
-  logo?: string;
-  truckName: string;
-  location: string;
-  startTime: string;
-  endTime: string;
-  cuisine?: string;
-  social?: {
-    Instagram?: string;
-    Facebook?: string;
-  };
-  status?: "open" | "opening_soon" | "inactive" | "closing_soon" | "unknown" | "closed";
-}
+import { FoodTruck } from "../types";
 
 export const parseTime = (timeStr: string, dateStr: string): number | null => {
   if (!timeStr || !dateStr) return null;

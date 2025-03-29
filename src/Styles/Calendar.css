@@ -100,8 +100,7 @@
     pointer-events: none;
   }
   
-  /* 🟢 Truck Entries */
-  .truck-entry {
+  .data-entry {
     background: #4caf50;
     color: white;
     font-size: 12px;
@@ -113,7 +112,7 @@
     cursor: pointer;
   }
   
-  .truck-entry:hover {
+  .data-entry:hover {
     background: #388e3c;
   }
   

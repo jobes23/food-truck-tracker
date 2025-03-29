@@ -1,5 +1,5 @@
 // src/components/ResetPassword.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { confirmPasswordReset, getAuth } from "firebase/auth";
 

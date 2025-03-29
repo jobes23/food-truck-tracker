@@ -1,5 +1,5 @@
 import React from "react";
-import { FoodTruck } from "../../utils/FoodTruckUtils";
+import { FoodTruck } from "../../types";
 
 interface Props {
   trucks: FoodTruck[];

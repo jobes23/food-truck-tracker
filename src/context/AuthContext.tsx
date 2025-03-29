@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth } from "../firebase";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { onAuthStateChanged, signInAnonymously, User } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import useAPI from "../hooks/useAPI";
-import LoadingOverlay from "../components/LoadingOverlay"; // ✅ Import loading overlay
+import LoadingOverlay from "../components/LoadingOverlay";
 
 interface AuthContextType {
   user: User | null;
@@ -23,42 +23,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     setLoading(true);
-  
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
-  
-      if (firebaseUser) {
-        const idToken = await firebaseUser.getIdToken();
-        const response = await callApi("getUserRole", "POST", { token: idToken }, {}, false);
-  
-        if (response.success && response.data) {
-          setRole(response.data.role);
-          localStorage.setItem("role", response.data.role);
-  
-          // ✅ Redirect only if the user is currently at login
-          if (window.location.pathname === "/login") {
-            if (response.data.role === "admin") {
-              navigate("/admin", { replace: true });
-            } else if (response.data.role === "food_truck_owner") {
-              navigate("/setmytruck", { replace: true });
-            } else {
-              navigate("/", { replace: true }); // Fallback for other roles
-            }
-          }
-        } else {
-          setRole(null);
-        }
-      } else {
-        setRole(null);
-      }
-  
-      setLoading(false);
-    });
-  
-    return () => unsubscribe();
-  }, [callApi, navigate]);  
 
-  // ✅ Logout Function
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        setUser(firebaseUser);
+
+        try {
+          const idToken = await firebaseUser.getIdToken();
+          const response = await callApi("getUserRole", "POST", { token: idToken }, {}, false);
+
+          if (response.success && response.data) {
+            setRole(response.data.role);
+            localStorage.setItem("role", response.data.role);
+
+            if (window.location.pathname === "/login") {
+              if (response.data.role === "admin") {
+                navigate("/admin", { replace: true });
+              } else if (response.data.role === "food_truck_owner") {
+                navigate("/setmytruck", { replace: true });
+              } else {
+                navigate("/", { replace: true });
+              }
+            }
+          } else {
+            setRole(null);
+          }
+        } catch (err) {
+          console.error("Error fetching role:", err);
+        }
+
+        setLoading(false);
+      } else {
+        // Sign in anonymously if no user exists
+        try {
+          const anonUser = await signInAnonymously(auth);
+          setUser(anonUser.user);
+        } catch (err) {
+          console.error("Anonymous sign-in failed:", err);
+        } finally {
+          setLoading(false);
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [callApi, navigate]);
+
   const logout = async () => {
     await auth.signOut();
     setUser(null);
@@ -69,7 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider value={{ user, role, loading, logout }}>
-      {loading ? <LoadingOverlay /> : children} {/* ✅ Show overlay while loading */}
+      {loading ? <LoadingOverlay /> : children}
     </AuthContext.Provider>
   );
 };

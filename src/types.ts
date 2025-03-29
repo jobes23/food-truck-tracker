@@ -1,15 +1,24 @@
 export interface FoodTruck {
-    id: string;
-    truckName: string;
-    logo?: string;
-    cuisine?: string;
-    website?: string;
-    social?: {
-      facebook?: string;
-      instagram?: string;
-    };
-    foodIcon?: string;
-  }
+  id: string;
+  truckName: string;
+  logo?: string;
+  cuisine?: string; // allow string[] if you're storing arrays
+  website?: string;
+  region?: string;
+  franchiseId?: string;
+  description?: string;
+  social?: {
+    facebook?: string;
+    instagram?: string;
+  };
+  foodIcon?: string;
+  status?: "open" | "opening_soon" | "inactive" | "closing_soon" | "unknown" | "closed";
+  startTime: string;
+  endTime: string;
+  location: string;
+  latitude: number;
+  longitude: number;
+}
   
 export interface ScheduleEntry {
     id: string;
@@ -44,3 +53,40 @@ export interface ApiResponse {
     trucks: TruckEntry[]; // ✅ Array of food trucks
   }
   
+  export interface SponsorScheduleEntry {
+    id: string; // date string, e.g., "2025-03-28"
+    sponsorId: string;
+    sponsorName: string;
+    logo?: string;
+    region: string;
+    placement: "popup" | "footer";
+    date: string;
+    startTime: string;
+    endTime: string;
+    location?: string;
+  }
+  
+  export interface Sponsor {
+    id?: string;
+    name: string;
+    region: string;
+    url: string;
+    logo: string;
+    email: string;
+    phone: string;
+    address: string;
+  }  
+  
+  export interface SponsorScheduleEntry {
+    date: string;
+    sponsorId: string;
+    sponsorName: string;
+    logo?: string;
+    region: string;
+    placement: "popup" | "footer";
+    startDate: string;
+    endDate: string;
+    startTime: string;
+    endTime: string;
+    location?: string;
+  }
