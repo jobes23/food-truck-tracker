@@ -4,11 +4,13 @@ import { onAuthStateChanged, signInAnonymously, User } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import useAPI from "../hooks/useAPI";
 import LoadingOverlay from "../components/LoadingOverlay";
+import { createOrUpdateUser } from "../utils/CreateOrUpdateUser"; // ✅ make sure this file exists
 
 interface AuthContextType {
   user: User | null;
   role: string | null;
   loading: boolean;
+  called: boolean;
   logout: () => Promise<void>;
 }
 
@@ -18,6 +20,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<string | null>(localStorage.getItem("role") || null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [called, setCalled] = useState<boolean>(false);
   const navigate = useNavigate();
   const { callApi } = useAPI<{ role: string }>();
 
@@ -32,10 +35,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const idToken = await firebaseUser.getIdToken();
           const response = await callApi("getUserRole", "POST", { token: idToken }, {}, false);
 
-          if (response.success && response.data) {
+          if (response.success && response.data?.role) {
             setRole(response.data.role);
             localStorage.setItem("role", response.data.role);
 
+            // ✅ Merge anonymous favorites if anonUid is stored
+            const anonUid = localStorage.getItem("anonUid");
+            await createOrUpdateUser(anonUid, response.data.role);
+            localStorage.removeItem("anonUid");
+
+            // Redirect logic
             if (window.location.pathname === "/login") {
               if (response.data.role === "admin") {
                 navigate("/admin", { replace: true });
@@ -47,21 +56,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           } else {
             setRole(null);
+            await createOrUpdateUser(null); // fallback - should still exist
           }
         } catch (err) {
-          console.error("Error fetching role:", err);
+          console.error("Error fetching role or updating user:", err);
+          setRole(null);
         }
 
         setLoading(false);
+        setCalled(true);
       } else {
-        // Sign in anonymously if no user exists
+        // Try anonymous sign-in
         try {
           const anonUser = await signInAnonymously(auth);
           setUser(anonUser.user);
+          localStorage.setItem("anonUid", anonUser.user.uid);
+          await createOrUpdateUser(null); // Create anon user
         } catch (err) {
           console.error("Anonymous sign-in failed:", err);
         } finally {
           setLoading(false);
+          setCalled(true);
         }
       }
     });
@@ -78,8 +93,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, role, loading, logout }}>
-      {loading ? <LoadingOverlay /> : children}
+    <AuthContext.Provider value={{ user, role, loading, called, logout }}>
+      {loading && !called ? <LoadingOverlay /> : children}
     </AuthContext.Provider>
   );
 };

@@ -90,3 +90,15 @@ export interface ApiResponse {
     endTime: string;
     location?: string;
   }
+
+  export interface ProcessedFoodTruck extends FoodTruck {
+    isInRange: boolean;
+    status:
+      | "open"
+      | "opening_soon"
+      | "inactive"
+      | "closed"
+      | "closing_soon"
+      | "unknown"
+      | undefined;
+  }

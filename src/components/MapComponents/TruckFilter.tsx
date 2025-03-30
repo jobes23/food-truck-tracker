@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import TruckList from "./TruckList";
+import { FoodTruck } from "../../types";
+import "../../Styles/TruckFilter.css";
 
 interface TruckFilterProps {
   selectedDate: string;
@@ -11,6 +14,9 @@ interface TruckFilterProps {
   setCuisine: React.Dispatch<React.SetStateAction<string[]>>;
   cuisineList: string[];
   truckCount: number;
+  truckList: FoodTruck[];
+  favoriteTrucks: string[];
+  toggleFavorite: (truckName: string) => void;
   timezone: string;
   selectedStatuses: string[];
   setSelectedStatuses: React.Dispatch<React.SetStateAction<string[]>>;
@@ -34,12 +40,16 @@ const TruckFilter: React.FC<TruckFilterProps> = ({
   setCuisine,
   cuisineList,
   truckCount,
+  truckList,
+  favoriteTrucks,
+  toggleFavorite,
   timezone,
   selectedStatuses,
   setSelectedStatuses,
 }) => {
   const [selectedFilter, setSelectedFilter] = useState<string>("Today");
-  const [activeSection, setActiveSection] = useState<"date" | "cuisine" | "status" | null>(null);
+  const [activeSection, setActiveSection] = useState<"date" | "cuisine" | "status" | "list" | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     if (selectedStatuses.length === 0) {
@@ -49,72 +59,61 @@ const TruckFilter: React.FC<TruckFilterProps> = ({
 
   const handleDateSelection = (option: string) => {
     if (selectedFilter === option) return;
-
     const now = new Date();
-    let newDate = new Date(now);
-    let newTimeRange = 5;
-
-    switch (option) {
-      case "Today":
-        break;
-      case "Tomorrow":
-        newDate.setDate(newDate.getDate() + 1);
-        break;
-      default:
-        return;
+    const newDate = new Date(now);
+    if (option === "Tomorrow") newDate.setDate(newDate.getDate() + 1);
+    const tzDate = getDateInTimezone(newDate, timezone);
+    if (selectedDate !== tzDate) {
+      setSelectedFilter(option);
+      setSelectedDate(tzDate);
+      setTimeRange(5);
     }
-
-    const timezoneCorrectedDate = getDateInTimezone(newDate, timezone);
-    if (selectedDate === timezoneCorrectedDate) return;
-
-    setSelectedFilter(option);
-    setSelectedDate(timezoneCorrectedDate);
-    setTimeRange(newTimeRange);
   };
 
-  const toggleCuisine = (selectedCuisine: string) => {
+  const toggleCuisine = (selected: string) => {
     setCuisine((prev) =>
-      prev.includes(selectedCuisine)
-        ? prev.filter((c) => c !== selectedCuisine)
-        : [...prev, selectedCuisine]
+      prev.includes(selected)
+        ? prev.filter((c) => c !== selected)
+        : [...prev, selected]
     );
   };
 
   const toggleStatus = (status: string) => {
     setSelectedStatuses((prev) => {
-      const updatedStatuses = prev.includes(status)
+      const updated = prev.includes(status)
         ? prev.filter((s) => s !== status)
         : [...prev, status];
-      return updatedStatuses.length === 0
-        ? ["open", "closing_soon", "opening_soon"]
-        : updatedStatuses;
+      return updated.length === 0 ? [] : updated;
     });
+  };
+
+  const handleMenuToggle = () => {
+    setMenuOpen(!menuOpen);
+    setActiveSection(null);
   };
 
   return (
     <div className="filter-container">
-      <div className="filter-buttons">
-        <div className="filter-button" onClick={() => setActiveSection(activeSection === "date" ? null : "date")}>
-          📅
-        </div>
-        <div className="filter-button" onClick={() => setActiveSection(activeSection === "cuisine" ? null : "cuisine")}>
-          🍽️
-        </div>
-        <div className="filter-button" onClick={() => setActiveSection(activeSection === "status" ? null : "status")}>
-          🚦
-        </div>
+      <div className={`radial-menu ${menuOpen ? "open" : ""}`}>
+        <button className="center-btn" onClick={handleMenuToggle}>
+          {menuOpen ? "✕" : "☰"}
+        </button>
+        {menuOpen && (
+          <>
+            <button className="menu-btn" onClick={() => setActiveSection("date")}>📅</button>
+            <button className="menu-btn" onClick={() => setActiveSection("cuisine")}>🍽️</button>
+            <button className="menu-btn" onClick={() => setActiveSection("status")}>🚦</button>
+            <button className="menu-btn" onClick={() => setActiveSection("list")}>📝</button>
+          </>
+        )}
       </div>
 
-      <p>🚚 {truckCount} food trucks available</p>
+      <p className="truck-count">🚚 {truckCount} food trucks available</p>
 
       {activeSection === "date" && (
-        <div className="date-picker">
+        <div className="date-picker fade-in">
           <label htmlFor="dateFilter">Select Date:</label>
-          <select
-            id="dateFilter"
-            value={selectedFilter}
-            onChange={(e) => handleDateSelection(e.target.value)}
-          >
+          <select id="dateFilter" value={selectedFilter} onChange={(e) => handleDateSelection(e.target.value)}>
             <option value="Today">Today</option>
             <option value="Tomorrow">Tomorrow</option>
           </select>
@@ -122,7 +121,7 @@ const TruckFilter: React.FC<TruckFilterProps> = ({
       )}
 
       {activeSection === "status" && (
-        <div className="status-container">
+        <div className="status-container fade-in">
           {["open", "closing_soon", "opening_soon"].map((status) => (
             <div
               key={status}
@@ -136,7 +135,7 @@ const TruckFilter: React.FC<TruckFilterProps> = ({
       )}
 
       {activeSection === "cuisine" && (
-        <div className="cuisine-options">
+        <div className="cuisine-options fade-in">
           {cuisineList.map((c) => (
             <div
               key={c}
@@ -146,6 +145,17 @@ const TruckFilter: React.FC<TruckFilterProps> = ({
               {c}
             </div>
           ))}
+        </div>
+      )}
+
+      {activeSection === "list" && (
+        <div className="truck-list-scrollable fade-in">
+          <h4>Available Trucks for {selectedDate}</h4>
+          <TruckList
+            trucks={truckList}
+            favoriteTrucks={favoriteTrucks}
+            toggleFavorite={toggleFavorite}
+          />
         </div>
       )}
     </div>

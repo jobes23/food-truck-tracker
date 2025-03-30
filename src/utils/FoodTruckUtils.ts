@@ -1,16 +1,20 @@
 import L from "leaflet";
 import { FoodTruck } from "../types";
 
+// Used in Map.tsx – add to a shared types file if needed
+export interface ProcessedFoodTruck extends FoodTruck {
+  isInRange: boolean;
+  status: "open" | "opening_soon" | "inactive" | "closed" | "closing_soon" | "unknown" | undefined;
+}
+
+// 🔧 Parses time and returns a local timestamp
 export const parseTime = (timeStr: string, dateStr: string): number | null => {
   if (!timeStr || !dateStr) return null;
 
-  // Convert `dateStr` to proper format (`YYYY-MM-DD`)
   const parsedDate = new Date(new Date(dateStr).toLocaleString("en-US", { timeZone: "America/New_York" }));
+  if (isNaN(parsedDate.getTime())) return null;
 
-  if (isNaN(parsedDate.getTime())) return null; // Ensure valid date
-  const formattedDate = parsedDate.toISOString().split("T")[0]; // Get YYYY-MM-DD
-
-  // Handle 24-hour time format (e.g., "14:30")
+  const formattedDate = parsedDate.toISOString().split("T")[0];
   const match = timeStr.match(/^(\d{2}):(\d{2})$/);
   if (!match) {
     console.error(`[parseTime] Invalid time format: ${timeStr}`);
@@ -19,23 +23,18 @@ export const parseTime = (timeStr: string, dateStr: string): number | null => {
 
   const hours = parseInt(match[1], 10);
   const minutes = parseInt(match[2], 10);
-
-  // Construct a Date object in local time
   const dateTime = new Date(`${formattedDate}T${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:00`);
   return dateTime.getTime();
 };
 
+// 🟢 Determines status like "open", "closing_soon", etc.
 export const getTruckStatus = (
   startTime: string,
   endTime: string,
   selectedDate: string,
   timeRange: number,
   timezone: string
-): FoodTruck["status"] => { // ✅ Explicitly returning the correct type
-
-  console.log(`[DEBUG] Input - Start: ${startTime}, End: ${endTime}, Date: ${selectedDate}, TimeRange: ${timeRange}, Timezone: ${timezone}`);
-
-  // Get current time in the truck's timezone
+): FoodTruck["status"] => {
   const now = new Date();
   const formatter = new Intl.DateTimeFormat("en-US", {
     timeZone: timezone,
@@ -48,7 +47,6 @@ export const getTruckStatus = (
     hour12: false,
   });
 
-  // Format `now` to match the truck's timezone
   const parts = formatter.formatToParts(now);
   const year = parts.find((p) => p.type === "year")?.value;
   const month = parts.find((p) => p.type === "month")?.value.padStart(2, "0");
@@ -60,13 +58,11 @@ export const getTruckStatus = (
   const nowTimeString = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
   const nowTime = new Date(nowTimeString);
 
-  // Convert truck start and end times to Date objects
   const start = new Date(`${selectedDate}T${startTime}`);
   const end = new Date(`${selectedDate}T${endTime}`);
 
   if (nowTime >= start && nowTime <= end) {
-    // Check if closing soon
-    const closingTimeThreshold = new Date(end.getTime() - timeRange * 60 * 1000); // subtract timeRange minutes
+    const closingTimeThreshold = new Date(end.getTime() - timeRange * 60 * 1000);
     if (nowTime >= closingTimeThreshold) {
       return "closing_soon";
     }
@@ -76,16 +72,70 @@ export const getTruckStatus = (
   if (nowTime > end) return "closed";
   if (nowTime < start) return "opening_soon";
 
-  return "unknown"; // Added for safety.
+  return "unknown";
 };
 
+// 🧠 Converts raw trucks into processed ones with status and isInRange
+export const processTruckData = (
+  trucks: FoodTruck[],
+  selectedDate: string,
+  timeRange: number,
+  timezone: string
+): ProcessedFoodTruck[] => {
+  return trucks.map((truck) => {
+    const status = getTruckStatus(truck.startTime, truck.endTime, selectedDate, timeRange, timezone);
+    return {
+      ...truck,
+      status,
+      isInRange: status !== "closed",
+    };
+  });
+};
+
+// 🍱 Extracts unique cuisines from a list of trucks
+export const getUniqueCuisines = (trucks: FoodTruck[]): string[] => {
+  return Array.from(
+    new Set(
+      trucks
+        .map((truck) => truck.cuisine)
+        .filter((c): c is string => Boolean(c))
+    )
+  );
+};
+
+// 🔄 Determines if the truck cache should be refreshed
+export const shouldRefetchTrucks = (timestamp: number, expirationMs = 60 * 60 * 1000): boolean => {
+  return Date.now() - timestamp > expirationMs;
+};
+
+// 🧼 Optional session cleaner
+export const cleanupTruckCache = (maxAgeMs = 60 * 60 * 1000) => {
+  Object.keys(sessionStorage).forEach((key) => {
+    if (key.startsWith("trucks_")) {
+      const raw = sessionStorage.getItem(key);
+      if (raw) {
+        try {
+          const { timestamp } = JSON.parse(raw);
+          if (shouldRefetchTrucks(timestamp, maxAgeMs)) {
+            sessionStorage.removeItem(key);
+          }
+        } catch {
+          sessionStorage.removeItem(key); // if corrupted, remove anyway
+        }
+      }
+    }
+  });
+};
+
+// 🗺️ Generates a Leaflet icon for the truck with color/status
 export const createFoodTruckIcon = (status: FoodTruck["status"], isFavorite: boolean) => {
   const statusColors: Record<string, string> = {
-    open: "#28a745", // Brighter, more accessible green
-    closing_soon: "#ffc107", // Yellow/amber for warning
-    opening_soon: "#007bff", // Blue for anticipation/upcoming
-    inactive: "#6c757d", // Gray for neutral/off state
-    closed: "#dc3545", // Red for definitively closed
+    open: "#28a745",
+    closing_soon: "#ffc107",
+    opening_soon: "#007bff",
+    inactive: "#6c757d",
+    closed: "#dc3545",
+    unknown: "#999999",
   };
 
   const backgroundColor = statusColors[status || "inactive"];

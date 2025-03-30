@@ -1,0 +1,76 @@
+.filter-container {
+  position: relative;
+  padding: 1rem;
+}
+
+.radial-menu {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 100;
+}
+
+.center-btn {
+  width: 56px;
+  height: 56px;
+  font-size: 24px;
+  background-color: #333;
+  color: white;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+}
+
+.menu-btn {
+  display: block;
+  margin-top: 0.5rem;
+  width: 48px;
+  height: 48px;
+  font-size: 20px;
+  background-color: #555;
+  color: white;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.radial-menu.open .menu-btn {
+  opacity: 1;
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.status-container, .cuisine-options, .truck-list-scrollable {
+  margin-top: 1rem;
+}
+
+.status.selected, .cuisine-item.selected {
+  font-weight: bold;
+  background-color: #007bff;
+  color: white;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  margin: 0.2rem;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.truck-count {
+  margin: 1rem 0;
+  font-size: 1rem;
+}
