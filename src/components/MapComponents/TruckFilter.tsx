@@ -94,7 +94,7 @@ const TruckFilter: React.FC<TruckFilterProps> = ({
 
   return (
     <div className="filter-container">
-      <div className={`radial-menu ${menuOpen ? "open" : ""}`}>
+      <div className={`radial-menu `}>
         <button className="center-btn" onClick={handleMenuToggle}>
           {menuOpen ? "✕" : "☰"}
         </button>
