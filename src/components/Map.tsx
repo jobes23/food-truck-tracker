@@ -38,6 +38,12 @@ const Map: React.FC = () => {
   );
 
   useEffect(() => {
+    if (cuisineList.length > 0 && selectedCuisines.length === 0) {
+      setSelectedCuisines(cuisineList);
+    }
+  }, [cuisineList]);
+  
+  useEffect(() => {
     if (timezone) {
       setSelectedDate(getDateInTimezone(timezone));
     }
@@ -50,13 +56,18 @@ const Map: React.FC = () => {
   const filteredTrucks = useMemo(() => {
     return trucksData.filter((truck) => {
       const matchesCuisine =
-        selectedCuisines.length === 0 ||
-        (truck.cuisine && selectedCuisines.includes(truck.cuisine));
+        selectedCuisines.length === 0
+          ? false
+          : truck.cuisine && selectedCuisines.includes(truck.cuisine);
+  
       const matchesStatus =
-        selectedStatuses.length === 0 || selectedStatuses.includes(truck.status || "");
+        selectedStatuses.length === 0 ||
+        selectedStatuses.includes(truck.status || "");
+  
       return truck.isInRange && matchesCuisine && matchesStatus;
     });
   }, [trucksData, selectedCuisines, selectedStatuses]);
+  
 
   return (
     <div className="map-container">

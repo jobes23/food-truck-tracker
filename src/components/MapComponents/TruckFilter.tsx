@@ -138,17 +138,22 @@ const TruckFilter: React.FC<TruckFilterProps> = ({
 
       {activeSection === "cuisine" && (
         <div className="cuisine-options fade-in">
-          {cuisineList.map((c) => (
-            <div
-              key={c}
-              className={`cuisine-item ${cuisine.includes(c) ? "selected" : ""}`}
-              onClick={() => toggleCuisine(c)}
-            >
-              {c}
-            </div>
-          ))}
+          {cuisineList.length === 0 ? (
+            <p className="loading-text">Loading cuisines...</p>
+          ) : (
+            cuisineList.map((c) => (
+              <div
+                key={c}
+                className={`cuisine-item ${cuisine.includes(c) ? "selected" : ""}`}
+                onClick={() => toggleCuisine(c)}
+              >
+                {c}
+              </div>
+            ))
+          )}
         </div>
       )}
+
 
       {activeSection === "list" && (
         <div className="truck-list-scrollable fade-in">

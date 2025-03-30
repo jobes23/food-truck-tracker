@@ -149,7 +149,7 @@
 }
 
 .filter-container {
-    width: fit-content;
+    width: 362px;
     position: absolute;
     z-index: 401;
     top: 10px;

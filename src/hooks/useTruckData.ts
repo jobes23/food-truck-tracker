@@ -24,15 +24,16 @@ const useTruckData = (
     if (stored) {
       const cuisines = Array.from(
         new Set(
-          rawFoodTrucks?.trucks
+          stored
             .map((t) => t.cuisine)
             .filter((c): c is string => typeof c === "string")
         )
       );
-      
+    
       setCuisineList(cuisines);
       setTrucksData(stored);
-    } else {
+    }
+    else {
       setLastApiDateRequested(selectedDate);
       callApi(`getFoodTrucks?date=${encodeURIComponent(selectedDate)}`, "GET");
     }
