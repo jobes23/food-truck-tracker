@@ -83,9 +83,11 @@ const TruckFilter: React.FC<TruckFilterProps> = ({
       const updated = prev.includes(status)
         ? prev.filter((s) => s !== status)
         : [...prev, status];
-      return updated.length === 0 ? [] : updated;
+  
+      return updated.length === 0 ? prev : updated;
     });
   };
+  
 
   const handleMenuToggle = () => {
     setMenuOpen(!menuOpen);

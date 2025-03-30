@@ -62,16 +62,6 @@
   margin-top: 1rem;
 }
 
-.status.selected, .cuisine-item.selected {
-  font-weight: bold;
-  background-color: #007bff;
-  color: white;
-  padding: 0.3rem 0.6rem;
-  border-radius: 4px;
-  margin: 0.2rem;
-  display: inline-block;
-  cursor: pointer;
-}
 
 .truck-count {
   margin: 1rem 0;

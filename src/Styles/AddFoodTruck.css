@@ -18,11 +18,6 @@
     background-color: #555;
   }
   
-  .cuisine-item.selected {
-    background-color: #4CAF50; /* Green for selected */
-    font-weight: bold;
-  }
-  
   /* 🔥 Food Icon Selector */
   .icon-options {
     display: flex;
